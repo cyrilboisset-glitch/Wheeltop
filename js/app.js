@@ -287,7 +287,27 @@ async function onMemorize() {
     }
     storage.setProfile(name, { rear: state.rear, front: state.front, fw: state.versions.rd });
     renderAll();
-    showResult('ok', `✅ Profil « ${esc(name)} » mémorisé`, `<p class="hint">${esc(list)}${state.front ? `<br>Limites FD : ${state.front.join(', ')}` : ''}</p>`);
+    // Comparaison avec l'autre profil (Roue <-> Trainer)
+    const otherName = PROFILE_NAMES.find((n) => n !== name);
+    const other = storage.getProfile(otherName);
+    let cmp = '';
+    let kind = 'ok';
+    if (other && other.rear.length === state.total) {
+      const diffs = state.rear
+        .map((v, i) => ({ gear: indexToGear(i + 1, state.total), v, o: other.rear[i] }))
+        .filter((d) => d.v !== d.o)
+        .sort((a, b) => a.gear - b.gear);
+      if (diffs.length === 0) {
+        kind = 'warn';
+        cmp = `<p><strong>Identique au profil « ${esc(otherName)} ».</strong> Si vous venez de modifier les réglages, ils ne sont peut-être pas encore enregistrés dans le dérailleur : appuyez sur « Relire » (écran Réglage) pour vérifier.</p>`;
+      } else {
+        cmp = `<p>Différences avec « ${esc(otherName)} » :</p><ul>${diffs.map((d) => `<li>Vitesse ${d.gear} : ${d.o} → ${d.v} (${d.v - d.o > 0 ? '+' : ''}${d.v - d.o})</li>`).join('')}</ul>`;
+      }
+    } else if (other) {
+      kind = 'warn';
+      cmp = `<p>Le profil « ${esc(otherName)} » a ${other.rear.length} vitesses, le dérailleur en a ${state.total} : comparaison impossible.</p>`;
+    }
+    showResult(kind, `✅ Profil « ${esc(name)} » mémorisé`, `${cmp}<p class="hint">${esc(list)}${state.front ? `<br>Limites FD : ${state.front.join(', ')}` : ''}</p>`);
   } catch (e) {
     showResult('err', 'Lecture impossible', `<p>${esc(errorText(e))}</p>`);
   }
