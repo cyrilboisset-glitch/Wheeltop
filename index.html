@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6feb">
+  <title>Wheeltop Profils</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">Wheeltop Profils</div>
+    <button id="btn-connect" class="pill">Connecter</button>
+  </header>
+
+  <div id="demo-banner" class="banner demo" hidden>MODE DÉMO : dérailleur simulé, rien n’est envoyé au vélo.</div>
+  <div id="nobt-banner" class="banner error" hidden>
+    Web Bluetooth indisponible. Utilisez Chrome sur Android, et ouvrez l’appli en HTTPS.
+  </div>
+
+  <section class="status card" id="status">
+    <div class="status-line"><span class="dot" id="status-dot"></span><span id="status-text">Non connecté</span></div>
+    <div class="status-details" id="status-details"></div>
+    <div class="progress" id="progress" hidden></div>
+  </section>
+
+  <div id="pending-banner" class="banner warn" hidden>
+    <div id="pending-text"></div>
+    <div class="row">
+      <button id="btn-pending-resume">Reprendre l’écriture</button>
+      <button id="btn-pending-restore">Restaurer la sauvegarde</button>
+      <button id="btn-pending-ignore" class="ghost">Ignorer</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- Profils -->
+    <section class="screen" id="screen-profiles">
+      <div class="big-buttons">
+        <button class="big" data-apply="Roue">Appliquer<br><strong>Roue</strong><small id="info-Roue"></small></button>
+        <button class="big trainer" data-apply="Trainer">Appliquer<br><strong>Trainer</strong><small id="info-Trainer"></small></button>
+      </div>
+
+      <div class="card">
+        <h2>Mémoriser la position actuelle</h2>
+        <p class="hint">Lit les valeurs actuellement dans le dérailleur et les enregistre dans le profil choisi.</p>
+        <div class="row">
+          <select id="memo-profile">
+            <option value="Roue">Roue</option>
+            <option value="Trainer">Trainer</option>
+          </select>
+          <button id="btn-memorize">Mémoriser</button>
+        </div>
+      </div>
+
+      <div id="result" class="card result" hidden></div>
+    </section>
+
+    <!-- Réglage par vitesse -->
+    <section class="screen" id="screen-tune" hidden>
+      <div class="card">
+        <div class="row space">
+          <h2>Réglage par vitesse</h2>
+          <button id="btn-read">Relire</button>
+        </div>
+        <p class="hint">Vitesse 1 = plus grand pignon. Modifiez une valeur puis « Écrire » : une sauvegarde est faite, puis la valeur est écrite et relue.</p>
+        <div class="table-wrap">
+          <table class="gears">
+            <thead><tr><th>Vit.</th><th>Dérailleur</th><th></th><th>Roue</th><th>Train.</th></tr></thead>
+            <tbody id="gears-body"><tr><td colspan="5" class="hint">Connectez-vous pour lire les valeurs.</td></tr></tbody>
+          </table>
+        </div>
+        <div id="front-values" class="hint"></div>
+      </div>
+    </section>
+
+    <!-- Test -->
+    <section class="screen" id="screen-test" hidden>
+      <div class="card live">
+        <div class="gear-display"><span id="live-gear">–</span><span id="live-total" class="total"></span></div>
+        <div class="chainring" id="live-chainring"></div>
+        <div class="shift-buttons">
+          <button id="btn-up" class="shift">▲ Monter<small>pignon plus petit</small></button>
+          <button id="btn-down" class="shift">▼ Descendre<small>pignon plus grand</small></button>
+        </div>
+        <div class="live-actions">
+          <button id="btn-preview">Preview (aller-retour)</button>
+          <button id="btn-front">Changer de plateau</button>
+        </div>
+        <p class="hint">Preview : change de vitesse puis revient, pour que le dérailleur prenne en compte une valeur modifiée sur la vitesse engagée.</p>
+      </div>
+      <div class="card">
+        <div class="row space"><h2>Batteries</h2><button id="btn-battery" class="ghost">Actualiser</button></div>
+        <div class="batteries" id="batteries"></div>
+      </div>
+    </section>
+
+    <!-- Données -->
+    <section class="screen" id="screen-data" hidden>
+      <div class="card">
+        <h2>Export / import</h2>
+        <p class="hint">Format compatible drEDS (drEDS-[date].json) : les profils deviennent des préréglages « EDS TX ».</p>
+        <div class="row">
+          <button id="btn-export">Exporter JSON</button>
+          <button id="btn-import">Importer JSON</button>
+          <input type="file" id="file-import" accept=".json,application/json" hidden>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Profils enregistrés</h2>
+        <div id="profiles-list"></div>
+      </div>
+      <div class="card">
+        <h2>Sauvegardes automatiques</h2>
+        <p class="hint">Valeurs du dérailleur enregistrées avant chaque écriture (30 dernières).</p>
+        <div id="backups-list"></div>
+      </div>
+      <div class="card">
+        <h2>Sécurité</h2>
+        <label class="field">Écart maximal autorisé par vitesse (pas)
+          <input type="number" id="set-maxdelta" min="10" max="1000" step="10">
+        </label>
+        <p class="hint">Toute écriture qui s’éloigne plus que cela de la valeur actuelle est refusée.</p>
+      </div>
+      <div class="card">
+        <h2>Divers</h2>
+        <label class="check"><input type="checkbox" id="set-demo"> Mode démo (dérailleur simulé)</label>
+        <label class="check"><input type="checkbox" id="set-log"> Afficher le journal Bluetooth</label>
+        <div id="log-wrap" hidden>
+          <div class="row"><button id="btn-copy-log" class="ghost">Copier le journal</button></div>
+          <pre id="log"></pre>
+        </div>
+        <p class="hint">Protocole d’après la documentation du projet drEDS (drJeckyll). Appli indépendante, aucun code repris.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-screen="profiles" class="active">Profils</button>
+    <button data-screen="tune">Réglage</button>
+    <button data-screen="test">Test</button>
+    <button data-screen="data">Données</button>
+  </nav>
+
+  <dialog id="dialog">
+    <form method="dialog">
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-body"></div>
+      <div class="row end" id="dialog-buttons"></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
