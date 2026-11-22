@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Charte GOATout -->
+<resources>
+    <color name="tuile">#1A1816</color>
+    <color name="fond_sombre">#0F0E0D</color>
+    <color name="fond_clair">#F6F1E7</color>
+    <color name="or">#F0CF73</color>
+    <color name="or_fonce">#8A6410</color>
+</resources>

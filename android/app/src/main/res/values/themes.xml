@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Thème clair (crème GOATout). isLightTheme indique aussi à la WebView le mode clair. -->
     <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#1f6feb</item>
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorPrimary">@color/or_fonce</item>
+        <item name="android:colorAccent">@color/or_fonce</item>
+        <item name="android:statusBarColor">@color/fond_clair</item>
+        <item name="android:navigationBarColor">@color/fond_clair</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/fond_clair</item>
     </style>
 </resources>

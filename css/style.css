@@ -1,36 +1,65 @@
+/* Charte GOATout (mêmes couleurs et polices que l'appli GOATout / dépôt New-strava) */
+@font-face { font-family: 'Space Grotesk'; src: url('../fonts/space-grotesk-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url('../fonts/space-grotesk-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; src: url('../fonts/barlow-condensed-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; src: url('../fonts/barlow-condensed-latin-600-normal.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; src: url('../fonts/barlow-condensed-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+
 :root {
-  --bg: #f4f6f8;
-  --card: #ffffff;
-  --text: #1b1f24;
-  --muted: #5d6670;
-  --border: #d8dee4;
-  --accent: #1f6feb;
-  --accent-text: #ffffff;
-  --trainer: #8250df;
-  --ok: #1a7f37;
+  /* Thème clair : crème */
+  --bg: #f6f1e7;
+  --card: #fffdf8;
+  --card-2: #efe8d9;
+  --border: #ddd3be;
+  --text: #1a1713;
+  --muted: #5a5246;
+  --muted-2: #8a8173;
+  --accent: #e8c15a;          /* or : remplissage des boutons */
+  --accent-2: #c99a34;        /* or foncé : bas du dégradé */
+  --accent-text: #1a1405;     /* texte posé sur l'or */
+  --accent-trait: #8a6410;    /* liens, contours, onglet actif */
+  --trainer: #c4673a;         /* cuivre : bouton Trainer */
+  --trainer-2: #a5532c;
+  --trainer-text: #fffaf2;
+  --ok: #1f9d55;
   --warn: #9a6700;
-  --warn-bg: #fff8c5;
-  --err: #cf222e;
-  --err-bg: #ffebe9;
-  --demo-bg: #ddf4ff;
-  --diff: #fff1c2;
+  --warn-bg: #fbefc9;
+  --err: #c0392b;
+  --err-bg: #fbe3df;
+  --demo-bg: #efe8d9;
+  --diff: #f6e3a8;
+  --ombre: 0 2px 3px rgb(40 30 10 / 10%), 0 10px 24px rgb(40 30 10 / 12%);
+  --rayon: 16px;
+  --police-marque: 'Space Grotesk', system-ui, sans-serif;
+  --police-chiffres: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', system-ui, sans-serif;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1117;
-    --card: #161b22;
-    --text: #e6edf3;
-    --muted: #8d96a0;
-    --border: #30363d;
-    --accent: #388bfd;
-    --trainer: #a371f7;
-    --ok: #3fb950;
-    --warn: #d29922;
+  :root:not([data-theme="light"]) {
+    /* Thème sombre GOATout */
+    --bg: #0f0e0d;
+    --card: #1c1a17;
+    --card-2: #27241f;
+    --border: #3a342c;
+    --text: #f4efe6;
+    --muted: #cfc8ba;
+    --muted-2: #978e7f;
+    --accent: #f0cf73;
+    --accent-2: #c99a34;
+    --accent-text: #1a1405;
+    --accent-trait: #f0cf73;
+    --trainer: #e9a178;
+    --trainer-2: #c46f3f;
+    --trainer-text: #1a1405;
+    --ok: #37c27b;
+    --warn: #f0cf73;
     --warn-bg: #2e2507;
-    --err: #f85149;
-    --err-bg: #3c1618;
-    --demo-bg: #0c2d4a;
-    --diff: #3a2f0b;
+    --err: #ff7b6b;
+    --err-bg: #3a1714;
+    --demo-bg: #27241f;
+    --diff: #4a3b12;
+    --ombre: 0 2px 3px rgb(0 0 0 / 40%), 0 12px 26px rgb(0 0 0 / 45%);
+    color-scheme: dark;
   }
 }
 
@@ -44,28 +73,31 @@ body {
   padding-bottom: calc(64px + env(safe-area-inset-bottom));
   -webkit-tap-highlight-color: transparent;
 }
-h2 { font-size: 1.05rem; margin: 0 0 8px; }
+h2 { font-family: var(--police-marque); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em; margin: 0 0 8px; }
 button {
   font: inherit;
-  border: 1px solid var(--accent);
-  background: var(--accent);
+  border: 1px solid var(--accent-2);
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
   color: var(--accent-text);
-  border-radius: 10px;
+  font-weight: 600;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 25%) inset, 0 2px 6px rgb(0 0 0 / 18%);
   padding: 10px 14px;
   min-height: 44px;
   cursor: pointer;
 }
-button.ghost { background: transparent; color: var(--accent); }
+button.ghost { background: transparent; color: var(--accent-trait); border-color: var(--accent-trait); box-shadow: none; }
 button:disabled { opacity: .45; cursor: not-allowed; }
 input, select {
   font: inherit;
   color: var(--text);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px;
   min-height: 44px;
 }
+input[type="number"] { font-family: var(--police-chiffres); font-weight: 600; font-size: 1.1rem; }
 
 .topbar {
   position: sticky; top: 0; z-index: 5;
@@ -74,20 +106,25 @@ input, select {
   background: var(--card);
   border-bottom: 1px solid var(--border);
 }
-.topbar .title { font-weight: 700; }
+.logo-mot { font-family: var(--police-marque); font-weight: 700; letter-spacing: -0.03em; font-size: 1.45rem; line-height: 1; }
+.logo-mot .top { color: var(--accent-trait); }
+.logo-mot .sous { font-weight: 500; font-size: .9rem; color: var(--muted-2); letter-spacing: 0; margin-left: 6px; }
+.topbar .marque { display: flex; align-items: center; gap: 10px; }
+.topbar .marque img { width: 32px; height: 32px; border-radius: 8px; box-shadow: var(--ombre); }
 .pill { border-radius: 999px; padding: 6px 16px; min-height: 36px; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
   padding: 14px;
   margin: 12px 16px;
 }
 .banner { margin: 12px 16px; padding: 12px; border-radius: 12px; }
 .banner.warn { background: var(--warn-bg); border: 1px solid var(--warn); }
 .banner.error { background: var(--err-bg); border: 1px solid var(--err); }
-.banner.demo { background: var(--demo-bg); border: 1px solid var(--accent); font-weight: 600; text-align: center; }
+.banner.demo { background: var(--demo-bg); border: 1px solid var(--accent-trait); color: var(--accent-trait); font-weight: 600; text-align: center; }
 .banner .row { margin-top: 8px; }
 
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -100,20 +137,22 @@ input, select {
 .dot.on { background: var(--ok); }
 .dot.busy { background: var(--warn); }
 .status-details { color: var(--muted); font-size: .9rem; margin-top: 4px; }
-.progress { margin-top: 8px; font-size: .92rem; color: var(--warn); }
+.progress { margin-top: 8px; font-size: .92rem; color: var(--accent-trait); }
+.dot.on { box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 25%, transparent); }
 
 .big-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 16px; }
 button.big {
   min-height: 140px;
   font-size: 1.05rem;
-  border-radius: 16px;
+  border-radius: 18px;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 30%) inset, var(--ombre);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
 }
-button.big strong { font-size: 1.6rem; }
+button.big strong { font-family: var(--police-marque); font-size: 1.75rem; letter-spacing: -0.02em; }
 button.big small { font-size: .75rem; opacity: .85; margin-top: 6px; }
-button.big.trainer { background: var(--trainer); border-color: var(--trainer); }
+button.big.trainer { background: linear-gradient(180deg, var(--trainer), var(--trainer-2)); border-color: var(--trainer-2); color: var(--trainer-text); }
 
-.result h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.result h3 { margin: 0 0 6px; font-family: var(--police-marque); font-size: 1.05rem; }
 .result.ok { border-color: var(--ok); }
 .result.ok h3 { color: var(--ok); }
 .result.warn { border-color: var(--warn); }
@@ -124,9 +163,10 @@ button.big.trainer { background: var(--trainer); border-color: var(--trainer); }
 
 .table-wrap { overflow-x: auto; }
 table.gears { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.gears th { font-family: var(--police-marque); font-size: .85rem; color: var(--muted); }
 table.gears th, table.gears td { padding: 4px 2px; text-align: center; border-bottom: 1px solid var(--border); }
-table.gears td.num { font-weight: 700; }
-table.gears td.engaged { color: var(--accent); }
+table.gears td.num { font-family: var(--police-chiffres); font-weight: 700; font-size: 1.15rem; }
+table.gears td.engaged { color: var(--accent-trait); }
 table.gears td.diff { background: var(--diff); }
 .stepper { display: flex; align-items: center; gap: 3px; justify-content: center; }
 .stepper button { min-width: 32px; min-height: 40px; padding: 4px 6px; }
@@ -134,19 +174,20 @@ table.gears td.diff { background: var(--diff); }
 .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .stepper input.changed { border-color: var(--warn); border-width: 2px; }
 td .write { padding: 6px 8px; min-height: 40px; }
-table.gears td.prof { font-size: .85rem; }
+table.gears td.prof { font-family: var(--police-chiffres); font-weight: 500; font-size: 1rem; color: var(--muted); }
+table.gears td.prof.diff { color: var(--text); border-radius: 6px; }
 
 .live { text-align: center; }
-.gear-display { font-size: 5rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.gear-display { font-family: var(--police-chiffres); font-size: 6.5rem; font-weight: 700; line-height: 1; color: var(--accent-trait); }
 .gear-display .total { font-size: 2rem; color: var(--muted); }
-.chainring { color: var(--muted); margin: 6px 0 12px; min-height: 1.2em; }
+.chainring { color: var(--trainer); font-family: var(--police-marque); font-weight: 500; margin: 6px 0 12px; min-height: 1.2em; }
 .live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .shift-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 button.shift { min-height: 96px; font-size: 1.3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 button.shift small { font-size: .75rem; opacity: .85; }
 .batteries { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.battery { border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
-.battery .v { font-size: 1.3rem; font-weight: 700; }
+.battery { border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; background: var(--card-2); }
+.battery .v { font-family: var(--police-chiffres); font-size: 1.6rem; font-weight: 600; }
 .battery .l { color: var(--muted); font-size: .85rem; }
 
 .list-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
@@ -157,6 +198,7 @@ button.shift small { font-size: .75rem; opacity: .85; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .check { display: flex; gap: 10px; align-items: center; min-height: 44px; }
 .check input { min-height: auto; width: 20px; height: 20px; }
+.accroche { margin: 0; font-family: var(--police-marque); font-weight: 500; color: var(--trainer); }
 pre#log { max-height: 300px; overflow: auto; font-size: .72rem; background: var(--bg); padding: 8px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; }
 
 .tabs {
@@ -166,12 +208,22 @@ pre#log { max-height: 300px; overflow: auto; font-size: .72rem; background: var(
   padding-bottom: env(safe-area-inset-bottom);
 }
 .tabs button { background: transparent; color: var(--muted); border: none; border-radius: 0; min-height: 56px; }
-.tabs button.active { color: var(--accent); font-weight: 700; box-shadow: inset 0 3px 0 var(--accent); }
+.tabs button { box-shadow: none; font-family: var(--police-marque); font-weight: 500; }
+.tabs button.active { color: var(--accent-trait); font-weight: 700; box-shadow: inset 0 3px 0 var(--accent-trait); }
 
 dialog {
-  border: 1px solid var(--border); border-radius: 14px;
+  border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
   background: var(--card); color: var(--text);
   width: min(92vw, 480px); padding: 16px;
 }
 dialog::backdrop { background: rgba(0, 0, 0, .5); }
 dialog ul { padding-left: 20px; }
+
+/* Boutons secondaires (ne gardent l'or que les actions principales) */
+.stepper button, .live-actions button {
+  background: var(--card-2);
+  color: var(--text);
+  border-color: var(--border);
+  box-shadow: none;
+}
+.live-actions button { color: var(--accent-trait); }

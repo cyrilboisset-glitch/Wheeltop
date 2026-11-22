@@ -3,16 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1f6feb">
+  <meta name="theme-color" content="#f6f1e7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f0e0d" media="(prefers-color-scheme: dark)">
   <title>Wheeltop Profils</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preload" href="fonts/space-grotesk-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="title">Wheeltop Profils</div>
+    <div class="marque"><img src="icons/icon-192.png" alt=""><span class="logo-mot">Wheel<span class="top">top</span><span class="sous">Profils</span></span></div>
     <button id="btn-connect" class="pill">Connecter</button>
   </header>
 
@@ -133,7 +135,8 @@
           <div class="row"><button id="btn-copy-log" class="ghost">Copier le journal</button></div>
           <pre id="log"></pre>
         </div>
-        <p class="hint">Protocole d’après la documentation du projet drEDS (drJeckyll). Appli indépendante, aucun code repris.</p>
+        <p class="accroche">Go out. Be the GOAT.</p>
+        <p class="hint">Famille GOATout. Protocole d’après la documentation du projet drEDS (drJeckyll). Appli indépendante, aucun code repris. Polices Space Grotesk et Barlow Condensed (licence OFL).</p>
       </div>
     </section>
   </main>

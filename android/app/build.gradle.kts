@@ -7,7 +7,7 @@ plugins {
 val webRoot = rootProject.projectDir.parentFile
 val webAssets = layout.buildDirectory.dir("generated/webassets")
 val copyWeb by tasks.registering(Sync::class) {
-    from(webRoot) { include("index.html", "manifest.json", "css/**", "js/**", "icons/**") }
+    from(webRoot) { include("index.html", "manifest.json", "css/**", "js/**", "icons/**", "fonts/**") }
     into(webAssets.map { it.dir("www") })
 }
 
@@ -19,8 +19,8 @@ android {
         applicationId = "app.wheeltop.profils"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     signingConfigs {
