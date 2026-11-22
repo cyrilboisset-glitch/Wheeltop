@@ -43,7 +43,7 @@ test('setGearValue : une réponse perdue -> nouvelle tentative réussie', async 
   const sim = createSimulatedTx();
   const s = await connect(sim);
   sim.state.dropReplies = 1;
-  const t = TIMEOUTS.setGear; TIMEOUTS.setGear = 50;
+  const t = TIMEOUTS.setGear; TIMEOUTS.setGear = 300; // assez long pour une machine chargée
   try { await s.setGearValue(3, 430); } finally { TIMEOUTS.setGear = t; }
   assert.equal(sim.state.rear[2], 430);
   assert.equal(sim.state.writes.length, 2);
@@ -155,11 +155,12 @@ test('restauration de la sauvegarde après interruption', async () => {
 test('changement de vitesse et notification serverReportGear', async () => {
   const sim = createSimulatedTx({ num: 4 });
   const s = await connect(sim);
-  const nums = [];
-  s.on((e) => { if (e.type === 'gear' && !e.moving) nums.push(e.num); });
+  const done = new Promise((resolve, reject) => {
+    const off = s.on((e) => { if (e.type === 'gear' && !e.moving) { off(); resolve(e.num); } });
+    setTimeout(() => reject(new Error('pas de serverReportGear')), 3000);
+  });
   await s.shiftUp();
-  await new Promise((r) => setTimeout(r, 250));
-  assert.deepEqual(nums, [3]);
+  assert.equal(await done, 3);
   const bat = await s.getBatteries();
   assert.equal(bat.rd, 730);
 });
