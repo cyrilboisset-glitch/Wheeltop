@@ -2,6 +2,7 @@
 import { DEVICE_NAME_TX, indexToGear, gearToIndex } from './protocol.js';
 import { EdsSession, DisconnectedError, TimeoutError } from './eds-session.js';
 import { isWebBluetoothAvailable, requestEdsDevice, connectTransport } from './web-bluetooth.js';
+import { isAndroidBridge, connectAndroid, saveFileAndroid } from './android-bluetooth.js';
 import { createSimulatedTx } from './simulator.js';
 import { applyRearValues, validateTarget } from './tuning.js';
 import { createStorage, toDrEdsExport, fromDrEdsImport, exportFileName, PROFILE_NAMES } from './storage.js';
@@ -40,6 +41,11 @@ function log(s) {
   if ($('set-log').checked) { const el = $('log'); el.textContent = app.logLines.join('\n'); el.scrollTop = el.scrollHeight; }
 }
 function download(obj, name) {
+  if (isAndroidBridge()) {
+    // La WebView ne sait pas télécharger un Blob : enregistrement natif dans Téléchargements
+    alertDialog('Fichier enregistré', `<p>${esc(saveFileAndroid(name, JSON.stringify(obj, null, 2)))}</p>`);
+    return;
+  }
   const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -84,6 +90,11 @@ async function openTransport(fresh) {
   if (app.demo) {
     if (!app.sim) app.sim = createSimulatedTx({ latency: 30 });
     return app.sim.state.connected ? app.sim.transport : app.sim.reconnect();
+  }
+  if (isAndroidBridge()) {
+    const t = await connectAndroid({ fresh: fresh || !app.device });
+    app.device = { android: true };
+    return t;
   }
   if (!isWebBluetoothAvailable()) throw new Error('Web Bluetooth indisponible dans ce navigateur.');
   if (fresh || !app.device) app.device = await requestEdsDevice();
@@ -633,13 +644,13 @@ function bind() {
 
 function applyEnvBanners() {
   $('demo-banner').hidden = !app.demo;
-  $('nobt-banner').hidden = app.demo || isWebBluetoothAvailable();
+  $('nobt-banner').hidden = app.demo || isWebBluetoothAvailable() || isAndroidBridge();
 }
 
 bind();
 applyEnvBanners();
 renderAll();
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if (!isAndroidBridge() && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
 // Exposé pour le débogage depuis la console
 window.wheeltop = { app, storage, validateTarget };

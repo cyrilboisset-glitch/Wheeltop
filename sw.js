@@ -1,8 +1,8 @@
 // Service worker : fonctionnement hors ligne (l'appli doit avoir été ouverte une fois en ligne).
-const CACHE = 'wheeltop-v1';
+const CACHE = 'wheeltop-v2';
 const FILES = [
   './', 'index.html', 'manifest.json', 'css/style.css',
-  'js/app.js', 'js/protocol.js', 'js/eds-session.js', 'js/web-bluetooth.js', 'js/simulator.js', 'js/tuning.js', 'js/storage.js',
+  'js/app.js', 'js/protocol.js', 'js/eds-session.js', 'js/web-bluetooth.js', 'js/android-bluetooth.js', 'js/simulator.js', 'js/tuning.js', 'js/storage.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 self.addEventListener('install', (e) => {

@@ -1,0 +1,32 @@
+name: APK Android
+
+# Compile l'APK (interface web + pont Bluetooth natif). Lancement manuel depuis l'onglet Actions.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tests du protocole et de la logique
+        run: npm test
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Compilation de l'APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheeltop-profils-apk
+          path: android/app/build/outputs/apk/release/*.apk

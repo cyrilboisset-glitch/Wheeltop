@@ -21,6 +21,25 @@ Web Bluetooth exige **HTTPS** (ou `localhost`). Le plus simple : GitHub Pages.
 
 En local sur un ordinateur : `npm run serve` puis http://localhost:8080.
 
+## Appli Android (APK)
+
+Le dossier `android/` contient une appli native qui embarque la même interface (copiée depuis la racine à chaque compilation).
+La WebView d'Android ne gère pas Web Bluetooth : le Bluetooth y est fourni par un petit pont Kotlin
+(`BleBridge.kt`), qui ne fait que transporter les octets. Le protocole et la sécurité restent dans `js/`.
+
+- Pas besoin d'hébergement HTTPS ni de Chrome ; fonctionne hors ligne.
+- Export : le fichier est enregistré dans **Téléchargements**. Import : sélecteur de fichiers Android.
+- Signature : clé fixe `android/keystore/wheeltop-debug.jks` (mot de passe `android`, non secrète). Elle permet d'installer
+  une nouvelle version par-dessus l'ancienne **sans perdre les profils**. Désinstaller l'appli efface les profils : exportez avant.
+
+Compilation :
+- **GitHub Actions** : onglet *Actions → APK Android → Run workflow*, puis télécharger l'artefact `wheeltop-profils-apk`.
+- **En local** (SDK Android installé, plateforme 34) : `cd android && ./gradlew assembleRelease`,
+  APK dans `android/app/build/outputs/apk/release/`.
+
+Installation sur le téléphone : copier l'APK, l'ouvrir, autoriser « installer des applis inconnues » pour l'appli qui l'ouvre,
+puis au premier lancement autoriser « Appareils à proximité ».
+
 ## Procédure de test conseillée sur le vélo (vélo sur pied)
 
 Essayez d'abord le **mode démo** (Données → Mode démo) pour prendre l'appli en main.
