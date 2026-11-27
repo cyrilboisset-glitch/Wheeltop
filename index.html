@@ -63,6 +63,36 @@
 
     <!-- Réglage par vitesse -->
     <section class="screen" id="screen-tune" hidden>
+      <div class="card live-tune" id="live-card">
+        <div class="row space"><h2>Réglage en direct</h2><span id="lt-badge" class="lt-badge" hidden>EN DIRECT</span></div>
+        <div id="live-off">
+          <p class="hint">Chaque appui sur + / − est écrit aussitôt dans la vitesse engagée, relu, puis le dérailleur se replace. Idéal sur le trainer, en pédalant, pour écouter s’il gratte.</p>
+          <button id="btn-live-start" class="wide">Démarrer le réglage en direct</button>
+        </div>
+        <div id="live-on" hidden>
+          <div class="lt-gear-line">Vitesse <span id="lt-gear" class="lt-gear">–</span><span id="lt-total" class="lt-total"></span></div>
+          <div class="lt-value-line">
+            <button id="lt-minus" class="lt-step" aria-label="Moins">−</button>
+            <div class="lt-value"><span id="lt-value">–</span><small id="lt-delta"></small></div>
+            <button id="lt-plus" class="lt-step" aria-label="Plus">+</button>
+          </div>
+          <p class="hint center">+ : vers les grands pignons · − : vers les petits pignons</p>
+          <div id="lt-status" class="lt-status"></div>
+          <div class="row lt-options">
+            <label class="field-inline">Pas
+              <select id="lt-step"><option value="1">1</option><option value="2">2</option><option value="5">5</option><option value="10">10</option><option value="20">20</option></select>
+            </label>
+            <label class="check"><input type="checkbox" id="lt-reposition"> Aller-retour après écriture</label>
+          </div>
+          <div class="lt-shift">
+            <button id="lt-up">▲ Monter</button>
+            <button id="lt-down">▼ Descendre</button>
+          </div>
+          <button id="btn-live-stop" class="wide stop">Terminer le réglage en direct</button>
+        </div>
+        <div id="live-result" class="result" hidden></div>
+      </div>
+
       <div class="card">
         <div class="row space">
           <h2>Réglage par vitesse</h2>

@@ -6,6 +6,11 @@ PWA (Chrome Android, Web Bluetooth) pour basculer le réglage fin par vitesse d'
 - Deux gros boutons « Appliquer Roue / Trainer » : connexion, lecture, confirmation, sauvegarde, écriture des seules vitesses qui diffèrent, relecture et vérification.
 - « Mémoriser la position actuelle » : enregistre les valeurs lues dans le dérailleur dans un profil.
 - Écran **Réglage** : modifier et écrire une seule vitesse (avec sauvegarde et relecture).
+- **Réglage en direct** (écran Réglage) : chaque appui + / − est écrit aussitôt dans la vitesse engagée
+  (appuis rapprochés regroupés après 0,4 s), relu, puis le dérailleur fait un aller-retour de vitesse pour se replacer
+  (option « Aller-retour après écriture », à décocher si le dérailleur se replace tout seul). Sauvegarde et confirmation
+  une seule fois au démarrage ; limite ±N pas autour de la valeur de départ ; arrêt au premier écart ou à la première coupure.
+  Pensez à « Mémoriser » ensuite dans le profil voulu.
 - Écran **Test** : vitesse engagée, plateau, batteries, monter/descendre, Preview (aller-retour).
 - **Données** : export/import JSON compatible drEDS (`drEDS-[date].json`), sauvegardes automatiques avec restauration, réglages de sécurité, journal Bluetooth, **mode démo** (dérailleur simulé).
 - Pas de serveur : tout est stocké dans le navigateur (localStorage). Exportez régulièrement.

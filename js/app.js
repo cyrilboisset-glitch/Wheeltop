@@ -4,7 +4,7 @@ import { EdsSession, DisconnectedError, TimeoutError } from './eds-session.js';
 import { isWebBluetoothAvailable, requestEdsDevice, connectTransport } from './web-bluetooth.js';
 import { isAndroidBridge, connectAndroid, saveFileAndroid, onAndroidLifecycle } from './android-bluetooth.js';
 import { createSimulatedTx } from './simulator.js';
-import { applyRearValues, validateTarget } from './tuning.js';
+import { applyRearValues, validateTarget, LiveTuner } from './tuning.js';
 import { createStorage, toDrEdsExport, fromDrEdsImport, exportFileName, PROFILE_NAMES } from './storage.js';
 
 const $ = (id) => document.getElementById(id);
@@ -139,6 +139,7 @@ async function readState() {
 }
 
 function onSessionEvent(evt) {
+  if (evt.type === 'disconnect' && app.live) app.live.abort('Dérailleur déconnecté pendant le réglage en direct.');
   if (evt.type === 'gear') { app.liveNum = evt.num; renderLive(); }
   if (evt.type === 'front') { app.liveChainring = evt.chainring; renderLive(); }
   if (evt.type === 'disconnect') {
@@ -175,6 +176,7 @@ async function autoReconnect() {
 // Exécute une opération en bloquant les boutons.
 async function runExclusive(fn) {
   if (app.busy) throw new Error('Une opération est déjà en cours.');
+  if (app.live) throw new Error('Terminez d’abord le réglage en direct.');
   app.busy = true; renderButtons();
   try { return await fn(); } finally { app.busy = false; setProgress(null); renderButtons(); renderStatus(); }
 }
@@ -476,9 +478,12 @@ function renderStatus() {
   $('btn-connect').textContent = connected ? 'Déconnecter' : 'Connecter';
 }
 function renderButtons() {
-  document.querySelectorAll('main button, #pending-banner button, #btn-connect').forEach((b) => {
+  const inLive = (b) => !!b.closest('#live-on');
+  document.querySelectorAll('main button, main select, main input[type="checkbox"], #pending-banner button, #btn-connect').forEach((b) => {
     if (b.id === 'btn-export' || b.id === 'btn-import' || b.id === 'btn-copy-log' || b.dataset.dlBackup) return;
-    b.disabled = app.busy;
+    if (b.id === 'set-demo' || b.id === 'set-log' || b.id === 'memo-profile') { b.disabled = !!app.live; return; }
+    if (b.closest('#gears-body') === null && b.tagName !== 'BUTTON' && !inLive(b)) return;
+    b.disabled = app.live ? !inLive(b) : app.busy;
   });
 }
 function renderProfilesInfo() {
@@ -488,7 +493,8 @@ function renderProfilesInfo() {
   }
 }
 function renderPending() {
-  const p = storage.getPending();
+  // Pendant le réglage en direct, l'opération « en attente » est la session en cours : pas de bandeau
+  const p = app.live ? null : storage.getPending();
   $('pending-banner').hidden = !p;
   if (p) $('pending-text').innerHTML = `<strong>Écriture interrompue</strong> : « ${esc(p.label)} » (${fmtDate(p.startedAt)}). Le dérailleur est peut-être à moitié écrit.`;
 }
@@ -560,6 +566,7 @@ function renderDataLists() {
   renderButtons();
 }
 function renderAll() {
+  renderLiveTuner();
   renderStatus(); renderProfilesInfo(); renderPending(); renderGears(); renderLive(); renderBatteries(); renderDataLists(); renderButtons();
 }
 
@@ -600,6 +607,20 @@ function bind() {
   });
   $('gears-body').addEventListener('input', (ev) => { if (ev.target.dataset.orig) ev.target.classList.toggle('changed', ev.target.value !== ev.target.dataset.orig); });
 
+  $('btn-live-start').addEventListener('click', onLiveStart);
+  $('btn-live-stop').addEventListener('click', () => stopLive());
+  $('lt-plus').addEventListener('click', () => liveNudge(1));
+  $('lt-minus').addEventListener('click', () => liveNudge(-1));
+  $('lt-up').addEventListener('click', () => liveShift('up'));
+  $('lt-down').addEventListener('click', () => liveShift('down'));
+  const prefs = livePrefs();
+  $('lt-step').value = String(prefs.step);
+  $('lt-reposition').checked = prefs.reposition;
+  $('lt-step').addEventListener('change', (ev) => saveLivePrefs({ step: Number(ev.target.value) }));
+  $('lt-reposition').addEventListener('change', (ev) => {
+    saveLivePrefs({ reposition: ev.target.checked });
+    if (app.live) app.live.reposition = ev.target.checked;
+  });
   $('btn-up').addEventListener('click', () => onShift('up'));
   $('btn-down').addEventListener('click', () => onShift('down'));
   $('btn-preview').addEventListener('click', onPreview);
@@ -643,6 +664,118 @@ function bind() {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Réglage en direct
+const LIVE_PREFS_KEY = 'wheeltop.live';
+function livePrefs() {
+  try { return { step: 5, reposition: true, ...JSON.parse(localStorage.getItem(LIVE_PREFS_KEY) || '{}') }; } catch { return { step: 5, reposition: true }; }
+}
+function saveLivePrefs(p) { try { localStorage.setItem(LIVE_PREFS_KEY, JSON.stringify({ ...livePrefs(), ...p })); } catch { /* */ } }
+
+async function onLiveStart() {
+  const maxDelta = storage.getSettings().maxDelta;
+  const ok = await dialog('Démarrer le réglage en direct ?',
+    `<ul>
+       <li>Chaque appui sur + ou − est <strong>écrit immédiatement</strong> dans la vitesse engagée (les appuis rapprochés sont regroupés).</li>
+       <li>Une <strong>sauvegarde</strong> de toutes les vitesses est faite maintenant.</li>
+       <li>Chaque écriture est <strong>relue</strong> ; au moindre écart, le mode s’arrête.</li>
+       <li>Limite : ±${maxDelta} pas autour de la valeur de départ de chaque vitesse ; l’ordre des pignons est conservé.</li>
+     </ul>
+     <p class="hint">Changez de vitesse avec la manette ou les boutons Monter / Descendre : le réglage suit la vitesse engagée.</p>`,
+    [{ label: 'Annuler', value: false, ghost: true }, { label: 'Démarrer', value: true }]);
+  if (!ok) return;
+  $('live-result').hidden = true;
+  try {
+    await runExclusive(async () => {
+      await ensureConnected();
+      const t = new LiveTuner({
+        session: app.session, deviceName: app.deviceName, storage,
+        settings: storage.getSettings(), reposition: livePrefs().reposition, onUpdate: onLiveUpdate,
+      });
+      await t.start();
+      app.live = t;
+    });
+  } catch (e) {
+    await alertDialog('Réglage en direct impossible', `<p>${esc(errorText(e))}</p>`);
+  }
+  renderAll();
+}
+
+function onLiveUpdate(t) {
+  if (t.state) { app.state = t.state; }
+  app.liveNum = t.num;
+  if (!t.active && t.status === 'error' && app.live === t) {
+    app.live = null;
+    showLiveResult('err', '❌ Réglage en direct arrêté', `<p>${esc(t.message || 'Erreur')}</p>
+      <p>Les valeurs déjà écrites et vérifiées restent dans le dérailleur. L’écriture est marquée « en attente » : le bandeau en haut propose de reprendre ou de restaurer la sauvegarde.</p>`, t.backup);
+    renderAll();
+    return;
+  }
+  renderLiveTuner();
+  renderGears();
+  renderStatus();
+}
+
+async function stopLive(reason) {
+  const t = app.live;
+  if (!t) return;
+  setLiveStatus('Écriture du dernier appui…', 'busy');
+  const r = await t.stop();
+  app.live = null;
+  if (r.error) return; // déjà affiché par onLiveUpdate
+  const total = t.total;
+  const list = r.changes.length
+    ? `<ul>${r.changes.map((c) => `<li>Vitesse ${indexToGear(c.index, total)} : ${c.from} → <strong>${c.to}</strong> (${c.to - c.from > 0 ? '+' : ''}${c.to - c.from})</li>`).join('')}</ul>
+       <p>Pour garder ce réglage, utilisez <strong>« Mémoriser la position actuelle »</strong> (écran Profils) dans le profil voulu.</p>`
+    : '<p>Aucune valeur modifiée.</p>';
+  showLiveResult('ok', '✅ Réglage en direct terminé', `${reason ? `<p class="hint">${esc(reason)}</p>` : ''}${list}`, r.changes.length ? r.backup : null);
+  renderAll();
+}
+
+function showLiveResult(kind, title, html, backup) {
+  const el = $('live-result');
+  el.className = `result card-inner ${kind}`;
+  el.innerHTML = `<h3>${title}</h3>${html}${backup ? `<div class="row"><button type="button" class="ghost" data-dl-backup="${esc(backup.id)}">Télécharger la sauvegarde d’avant</button></div>` : ''}`;
+  el.hidden = false;
+}
+
+function setLiveStatus(text, kind) {
+  const el = $('lt-status');
+  el.textContent = text || '';
+  el.className = `lt-status ${kind || ''}`;
+}
+
+function renderLiveTuner() {
+  const t = app.live;
+  $('live-off').hidden = !!t;
+  $('live-on').hidden = !t;
+  $('lt-badge').hidden = !t;
+  $('live-card').classList.toggle('on', !!t);
+  if (!t) return;
+  const i = t.num - 1;
+  $('lt-gear').textContent = indexToGear(t.num, t.total);
+  $('lt-total').textContent = ` / ${t.total}`;
+  const v = t.desired[i];
+  $('lt-value').textContent = v;
+  const d = v - t.startRear[i];
+  $('lt-delta').textContent = d ? `${d > 0 ? '+' : ''}${d} depuis le départ (${t.startRear[i]})` : `valeur de départ`;
+  const texts = { waiting: ['Appui pris en compte…', 'busy'], writing: ['Écriture et vérification…', 'busy'], repositioning: ['Aller-retour pour replacer le dérailleur…', 'busy'], ok: ['✓ Écrit et vérifié', 'ok'] };
+  if (t.message) setLiveStatus(t.message, 'err');
+  else setLiveStatus(...(texts[t.status] || ['', '']));
+}
+
+function liveNudge(sign) {
+  const t = app.live;
+  if (!t) return;
+  t.nudge(t.num, sign * Number($('lt-step').value));
+}
+
+async function liveShift(dir) {
+  const t = app.live;
+  if (!t) return;
+  try { await (dir === 'up' ? app.session.shiftUp() : app.session.shiftDown()); } catch (e) { log('Changement : ' + errorText(e)); }
+}
+
+// ---------------------------------------------------------------------------------------------
 // Arrière-plan : on libère le dérailleur pour que l'appli officielle puisse s'y connecter.
 // Jamais au milieu d'une opération : on attend qu'elle se termine (écriture + relecture comprises).
 let inBackground = false;
@@ -652,6 +785,10 @@ function setBackground(bg) {
   if (bg && !backgroundWaiter) backgroundWaiter = disconnectWhenIdle().finally(() => { backgroundWaiter = null; });
 }
 async function disconnectWhenIdle() {
+  if (app.live) {
+    log('Arrière-plan : fin du réglage en direct (le dernier appui est écrit et vérifié)');
+    await stopLive('L’appli est passée en arrière-plan : réglage en direct terminé.');
+  }
   if (app.busy) log('Arrière-plan : déconnexion dès la fin de l’opération en cours');
   while (app.busy || reconnecting) {
     if (!inBackground) return;
