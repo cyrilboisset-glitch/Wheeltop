@@ -19,6 +19,7 @@ export function createSimulatedTx(options = {}) {
     dropReplies: 0, // nombre de réponses à ignorer (test des délais d'expiration)
     disconnectAfterWrites: options.disconnectAfterWrites ?? null,
     writes: [],
+    commands: [], // toutes les commandes reçues (pour vérifier ce que l'appli envoie)
     connected: true,
     latency: options.latency ?? 5,
   };
@@ -48,6 +49,7 @@ export function createSimulatedTx(options = {}) {
   function handle(bytes) {
     const f = parseFrame(bytes);
     if (!f) return;
+    st.commands.push(f.cmd);
     switch (f.cmd) {
       case CMD.GET_KEY: reply(CMD.GET_KEY, [st.key]); break;
       case CMD.START_READ: {
@@ -97,9 +99,6 @@ export function createSimulatedTx(options = {}) {
       }
       case CMD.GET_TRANSMISSION_INFO:
         reply(CMD.GET_TRANSMISSION_INFO, [0x02, 0xda, 0x01, 0x37, 0, 0, 0x03, 0x0c, 0x01, 0x3e, 0, 0, 1]);
-        break;
-      case CMD.GET_FD_RD_VALUES:
-        reply(CMD.GET_FD_RD_VALUES, st.front.flatMap((v) => [(v >> 8) & 0xff, v & 0xff]));
         break;
       default: break; // commande inconnue : le simulateur ne répond pas
     }

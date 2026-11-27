@@ -11,7 +11,7 @@
 
 import {
   CMD, frames, parseFrame, parseStartReadReply, decodeReadBlock, parseInfoText, extractTxState,
-  isSetGearAccepted, parseServerReportGear, parseFrontStatusReport, parseTransmissionInfo, parseFdValues,
+  isSetGearAccepted, parseServerReportGear, parseFrontStatusReport, parseTransmissionInfo,
   REAR_UP, REAR_DOWN,
 } from './protocol.js';
 
@@ -129,16 +129,8 @@ export class EdsSession {
       let state = null, stateError = null;
       try { state = extractTxState(info); } catch (e) { stateError = e.message; }
 
-      // Bug TX : limites FD souvent absentes, on les redemande [PA:104]
-      if (state && !state.front) {
-        try {
-          const f = await this._request(frames.getFdValues(this.key), this._replyTo(CMD.GET_FD_RD_VALUES), TIMEOUTS.optional, 'getFdValues');
-          state.front = parseFdValues(f.payload);
-        } catch (e) {
-          if (e instanceof DisconnectedError) throw e;
-          this.log('Limites FD non disponibles : ' + e.message);
-        }
-      }
+      // Limites FD : seulement si le dérailleur les met dans ses données. La commande 0x61
+      // qui permettait de les redemander n'est plus envoyée (sens non documenté).
       return { text, info, state, stateError };
     });
   }

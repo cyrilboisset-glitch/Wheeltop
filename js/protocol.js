@@ -19,10 +19,12 @@ export const DEVICE_NAME_TX = 'EDS TX';
 // --- Commandes [PA:45-52, PA:147-170] ------------------------------------------------------
 // Volontairement ABSENTES : setTotalGear (0x91), fineTuneGear (0x95), fineTuneFrontGear (0x85),
 // shutdown (0x90) et tout ce qui touche au firmware. Cette appli ne doit jamais les envoyer.
+// Aussi absente : getFrontAndRearDerailleurGearValuesInfo (0x61). drEDS l'envoie avec les
+// octets 01 01 06 [FJ:801-804] mais leur sens n'est pas documenté : retirée par prudence.
+// N'importe quelle commande ajoutée ici doit avoir un effet connu et documenté.
 export const CMD = Object.freeze({
   GET_KEY: 0x11,
   GET_TRANSMISSION_INFO: 0x60, // batteries [FJ:498-501]
-  GET_FD_RD_VALUES: 0x61, // limites FD quand le TX ne les donne pas [PA:104, FJ:798-807]
   FRONT_STATUS_REPORT: 0x88, // notification spontanée : position FD [FJ:274-280]
   FRONT_LIFTING: 0x89, // changement de plateau [FJ:1552-1561]
   SET_GEAR_VALUE: 0x92, // setGearUpValue : réglage d'une vitesse RD [FJ:1060-1067]
@@ -116,7 +118,6 @@ export const frames = {
     return buildFrame(key, CMD.FRONT_LIFTING, [current]);
   },
   getTransmissionInfo: (key) => buildFrame(key, CMD.GET_TRANSMISSION_INFO, []), // [FJ:925]
-  getFdValues: (key) => buildFrame(key, CMD.GET_FD_RD_VALUES, [0x01, 0x01, 0x06]), // [FJ:801-804]
 };
 
 export const MAX_GEAR_VALUE = 0xffff;
@@ -164,14 +165,6 @@ export function parseTransmissionInfo(payload) {
   if (payload.length < 10) return null;
   const w = (i) => (payload[i] << 8) | payload[i + 1];
   return { rd: w(0), rightShifter: w(2), fd: w(6), leftShifter: w(8) };
-}
-
-// getFrontAndRearDerailleurGearValuesInfo : suite de valeurs 16 bits = Q_GEA[1..n] [FJ:484-489].
-// Tout à zéro = FD absent ou endormi [FJ:466-474] -> null.
-export function parseFdValues(payload) {
-  const values = [];
-  for (let i = 0; i + 1 < payload.length; i += 2) values.push((payload[i] << 8) | payload[i + 1]);
-  return values.some((v) => v !== 0) ? values : null;
 }
 
 // --- Texte d'information (concaténation des blocs) [PA:89-127] -----------------------------------

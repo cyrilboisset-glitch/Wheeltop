@@ -28,6 +28,8 @@ La WebView d'Android ne gère pas Web Bluetooth : le Bluetooth y est fourni par 
 (`BleBridge.kt`), qui ne fait que transporter les octets. Le protocole et la sécurité restent dans `js/`.
 
 - Pas besoin d'hébergement HTTPS ni de Chrome ; fonctionne hors ligne.
+- Quand l'appli passe en arrière-plan, elle se déconnecte du dérailleur (après la fin de l'opération en cours) pour
+  laisser la place à l'appli officielle. Elle se reconnecte au prochain bouton utilisé.
 - Export : le fichier est enregistré dans **Téléchargements**. Import : sélecteur de fichiers Android.
 - Signature : clé fixe `android/keystore/wheeltop-debug.jks` (mot de passe `android`, non secrète). Elle permet d'installer
   une nouvelle version par-dessus l'ancienne **sans perdre les profils**. Désinstaller l'appli efface les profils : exportez avant.
@@ -71,7 +73,7 @@ Essayez d'abord le **mode démo** (Données → Mode démo) pour prendre l'appli
 | Sens `rearLifting` | `0x02` = monter (pignon plus petit), `0x01` = descendre. HARDWARE.md:8 dit l'inverse | functions.js:1509, 1519 |
 | Numérotation | `H_GEA[1]` = plus petit pignon ; vitesse affichée = total − indice + 1 | functions.js:791, 843 ; style.css:790 |
 | Blocs de lecture | Les blocs ASCII se distinguent des trames par l'absence de CRC valide | functions.js:652-666 |
-| Limites FD absentes (bug TX) | Redemandées avec `0x61` + `01 01 06` | PROTOCOL-APP.md:104 ; functions.js:801 |
+| Limites FD absentes (bug TX) | **Plus redemandées** (v0.3.0) : la commande `0x61` + `01 01 06` de drEDS a un sens non documenté, retirée par prudence. Les limites FD ne s'affichent que si le dérailleur les donne dans ses données | PROTOCOL-APP.md:104 ; functions.js:801 |
 | Batteries (% affiché) | Estimation linéaire 6,9 V → 8,2 V, indicative | — |
 
 ## Architecture

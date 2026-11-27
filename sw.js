@@ -1,5 +1,5 @@
 // Service worker : fonctionnement hors ligne (l'appli doit avoir été ouverte une fois en ligne).
-const CACHE = 'wheeltop-v3';
+const CACHE = 'wheeltop-v4';
 const FILES = [
   './', 'index.html', 'manifest.json', 'css/style.css',
   'js/app.js', 'js/protocol.js', 'js/eds-session.js', 'js/web-bluetooth.js', 'js/android-bluetooth.js', 'js/simulator.js', 'js/tuning.js', 'js/storage.js',

@@ -21,9 +21,34 @@ test('lecture complète : blocs de 128 et de 16 octets', async () => {
     const s = await connect(sim);
     const r = await s.readAll();
     assert.deepEqual(r.state.rear, ORIG);
-    assert.deepEqual(r.state.front, [50, 0, 180, 780, 1010, 660]); // via 0x61 (bug TX)
+    assert.equal(r.state.front, null); // Q_GEA absents du texte (bug TX) : plus de 0x61 pour les redemander
     assert.equal(r.state.num, 4);
   }
+});
+
+test('lecture : limites FD lues quand le dérailleur les donne', async () => {
+  const sim = createSimulatedTx({ includeFrontInText: true });
+  const s = await connect(sim);
+  assert.deepEqual((await s.readAll()).state.front, [50, 0, 180, 780, 1010, 660]);
+});
+
+test('lecture seule : seules getKey, startRead et read partent vers le dérailleur', async () => {
+  const sim = createSimulatedTx();
+  const s = await connect(sim);
+  await s.readAll();
+  await s.readAll();
+  const sent = [...new Set(sim.state.commands)].sort((a, b) => a - b);
+  assert.deepEqual(sent, [0x11, 0xfa, 0xfb]);
+});
+
+test('application complète : aucune commande en dehors de lecture et setGearValue', async () => {
+  const sim = createSimulatedTx();
+  const s = await connect(sim);
+  const storage = createStorage(memBackend());
+  await applyRearValues({ session: s, deviceName: 'EDS TX', target: ORIG.map((v, i) => (i === 2 ? v + 5 : v)), label: 'Trainer', storage });
+  const sent = [...new Set(sim.state.commands)].sort((a, b) => a - b);
+  assert.deepEqual(sent, [0x11, 0x92, 0xfa, 0xfb]);
+  assert.deepEqual(sim.state.writes, [{ index: 3, value: 425 }]);
 });
 
 test('écriture d’une vitesse puis relecture', async () => {

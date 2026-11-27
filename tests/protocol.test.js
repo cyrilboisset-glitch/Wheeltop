@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   crc16, buildFrame, parseFrame, frames, CMD, parseInfoText, extractTxState, decodeReadBlock,
-  parseStartReadReply, parseServerReportGear, parseTransmissionInfo, parseFdValues, indexToGear, gearToIndex,
+  parseStartReadReply, parseServerReportGear, parseTransmissionInfo, indexToGear, gearToIndex,
 } from '../js/protocol.js';
 
 const h = (s) => Uint8Array.from(s.trim().split(/\s+/).map((x) => parseInt(x, 16)));
@@ -150,12 +150,10 @@ ANT_Ver:6.2,Q_CODE:0x0,
   // Le refus du GeX se fait sur le nom BLE (voir tuning.test.js), pas sur le texte.
 });
 
-test('notifications : serverReportGear, batteries, limites FD', () => {
+test('notifications : serverReportGear, batteries', () => {
   assert.deepEqual(parseServerReportGear([0, 0, 0, 0, 5, 1]), { num: 5, moving: true });
   assert.equal(parseServerReportGear([1, 2]), null);
   assert.deepEqual(parseTransmissionInfo([0x02, 0xda, 0x01, 0x37, 0, 0, 0x03, 0x0c, 0x01, 0x3e]), { rd: 730, rightShifter: 311, fd: 780, leftShifter: 318 });
-  assert.deepEqual(parseFdValues([0, 50, 0, 0, 0, 180]), [50, 0, 180]);
-  assert.equal(parseFdValues([0, 0, 0, 0]), null);
 });
 
 test('numérotation : H_GEA[1] = vitesse la plus haute (plus petit pignon)', () => {
@@ -166,5 +164,5 @@ test('numérotation : H_GEA[1] = vitesse la plus haute (plus petit pignon)', () 
 
 test('aucune commande dangereuse n’est exposée', () => {
   const codes = Object.values(CMD);
-  for (const forbidden of [0x91, 0x95, 0x85, 0x90, 0x93]) assert.ok(!codes.includes(forbidden), `0x${forbidden.toString(16)}`);
+  for (const forbidden of [0x91, 0x95, 0x85, 0x90, 0x93, 0x61]) assert.ok(!codes.includes(forbidden), `0x${forbidden.toString(16)}`);
 });

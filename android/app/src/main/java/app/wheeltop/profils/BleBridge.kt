@@ -115,6 +115,11 @@ class BleBridge(private val activity: MainActivity, private val webView: WebView
         "Échec de l'enregistrement : ${e.message}"
     }
 
+    /** Prévient l'interface que l'activité passe en arrière-plan ou revient au premier plan. */
+    fun notifyLifecycle(state: String) {
+        emit(JSONObject().put("type", "lifecycle").put("state", state))
+    }
+
     fun close() {
         main.post { closeGatt(notify = false) }
     }

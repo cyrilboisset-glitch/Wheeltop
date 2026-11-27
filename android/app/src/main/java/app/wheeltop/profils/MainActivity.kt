@@ -109,6 +109,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // L'interface déconnecte le dérailleur en arrière-plan (après l'opération en cours)
+    override fun onStart() {
+        super.onStart()
+        if (::bridge.isInitialized) bridge.notifyLifecycle("foreground")
+    }
+
+    override fun onStop() {
+        if (::bridge.isInitialized) bridge.notifyLifecycle("background")
+        super.onStop()
+    }
+
     override fun onDestroy() {
         bridge.close()
         webView.destroy()

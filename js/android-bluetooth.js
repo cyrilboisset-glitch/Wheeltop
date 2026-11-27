@@ -6,6 +6,10 @@ const pending = new Map();
 let seq = 0;
 let dataCbs = [];
 let discCbs = [];
+const lifecycleCbs = [];
+
+// cb('background' | 'foreground') : l'activité Android passe en arrière-plan / revient.
+export function onAndroidLifecycle(cb) { lifecycleCbs.push(cb); }
 
 export const isAndroidBridge = () => typeof window !== 'undefined' && !!window.WheeltopAndroid;
 
@@ -25,6 +29,8 @@ if (typeof window !== 'undefined') {
     } else if (e.type === 'data') {
       const bytes = fromB64(e.b64);
       dataCbs.forEach((cb) => cb(bytes));
+    } else if (e.type === 'lifecycle') {
+      lifecycleCbs.forEach((cb) => cb(e.state));
     } else if (e.type === 'disconnect') {
       // Toute requête en cours échoue
       for (const [id, p] of pending) { pending.delete(id); p.reject(Object.assign(new Error('GATT déconnecté'), { name: 'NetworkError' })); }

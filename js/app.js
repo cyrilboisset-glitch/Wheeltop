@@ -2,7 +2,7 @@
 import { DEVICE_NAME_TX, indexToGear, gearToIndex } from './protocol.js';
 import { EdsSession, DisconnectedError, TimeoutError } from './eds-session.js';
 import { isWebBluetoothAvailable, requestEdsDevice, connectTransport } from './web-bluetooth.js';
-import { isAndroidBridge, connectAndroid, saveFileAndroid } from './android-bluetooth.js';
+import { isAndroidBridge, connectAndroid, saveFileAndroid, onAndroidLifecycle } from './android-bluetooth.js';
 import { createSimulatedTx } from './simulator.js';
 import { applyRearValues, validateTarget } from './tuning.js';
 import { createStorage, toDrEdsExport, fromDrEdsImport, exportFileName, PROFILE_NAMES } from './storage.js';
@@ -641,6 +641,30 @@ function bind() {
   $('set-log').addEventListener('change', (ev) => { $('log-wrap').hidden = !ev.target.checked; log('Journal affiché'); });
   $('btn-copy-log').addEventListener('click', () => navigator.clipboard?.writeText(app.logLines.join('\n')));
 }
+
+// ---------------------------------------------------------------------------------------------
+// Arrière-plan : on libère le dérailleur pour que l'appli officielle puisse s'y connecter.
+// Jamais au milieu d'une opération : on attend qu'elle se termine (écriture + relecture comprises).
+let inBackground = false;
+let backgroundWaiter = null;
+function setBackground(bg) {
+  inBackground = bg;
+  if (bg && !backgroundWaiter) backgroundWaiter = disconnectWhenIdle().finally(() => { backgroundWaiter = null; });
+}
+async function disconnectWhenIdle() {
+  if (app.busy) log('Arrière-plan : déconnexion dès la fin de l’opération en cours');
+  while (app.busy || reconnecting) {
+    if (!inBackground) return;
+    await sleep(200);
+  }
+  if (!inBackground || !app.session?.connected) return;
+  app.userDisconnect = true; // pas de reconnexion automatique
+  await app.session.disconnect();
+  log('Déconnecté : appli en arrière-plan (le dérailleur est libre pour une autre appli)');
+  renderAll();
+}
+document.addEventListener('visibilitychange', () => setBackground(document.visibilityState === 'hidden'));
+onAndroidLifecycle((state) => setBackground(state === 'background'));
 
 function applyEnvBanners() {
   $('demo-banner').hidden = !app.demo;
